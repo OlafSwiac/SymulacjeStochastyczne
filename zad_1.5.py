@@ -13,6 +13,6 @@ for i in range(1000000):
 plt.hist(X, bins=1000, density=True)
 plt.show()
 
-# za kazdym razem losujemy u --> P(x > t) = 1/2 * t^2
-# raz losujemy u --> P(x > t) = 1/2 * t^2
+# za kazdym razem losujemy u --> P(x_lap > t) = 1/2 * t^2
+# raz losujemy u --> P(x_lap > t) = 1/2 * t^2
 

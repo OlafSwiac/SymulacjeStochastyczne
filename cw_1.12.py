@@ -9,7 +9,7 @@ def runisphere(n):
     points = []
     point = list(np.zeros(n))
     point_adj = list(np.zeros(n))
-    for i in range(10000000):
+    for i in range(100000):
         R = 1.1
         while R > 1:
             for j in range(n):
@@ -23,9 +23,15 @@ def runisphere(n):
 points = runisphere(3)
 points_x1 = [point[0] for point in points]
 points_x2 = [point[1] for point in points]
+points_x3 = [point[2] for point in points]
 
-"""plt.hist(points_x1, bins=100, density=True, stacked=True)
-plt.show()"""
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+my_cmap = plt.get_cmap('hsv')
+ax.scatter3D(points_x1, points_x2, points_x3, c=(np.array(points_x1) + np.array(points_x2) + np.array(points_x3)), cmap=my_cmap)
+
+"plt.hist(points_x1, bins=100, density=True, stacked=True)"
+plt.show()
 
 # rozklad brzegowy x1 -> jednostajny na (-1, 1)
 
