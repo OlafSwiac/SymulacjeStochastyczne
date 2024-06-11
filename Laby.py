@@ -479,7 +479,7 @@ def MCMC():
         X_d.append(w + 0.5)
         Y_d.append(
             np.math.factorial(m) / (np.math.factorial(m - w) * np.math.factorial(w)) * theta ** w * (1 - theta) ** (
-                        m - w))
+                    m - w))
         print(
             f'{w}: {np.math.factorial(m) / (np.math.factorial(m - w) * np.math.factorial(w)) * theta ** w * (1 - theta) ** (m - w)}')
     plt.hist(X, bins=np.arange(31), density=True)
@@ -561,12 +561,131 @@ def Model_AutoLogistyczny():
             sum = np.dot(W[i, :], x[n - 1, :]) - W[i, i] * (x[n - 1, i] - 1)
             p = 1 / (1 + np.exp(-sum))
             x[n, i] = np.random.choice(a=[1, 0], p=[p, 1 - p])
-    print(x[:,0])
+    print(x[:, 0])
     print(np.corrcoef(x, rowvar=False))
     plt.imshow(np.corrcoef(x, rowvar=False), cmap='Blues')
     plt.show()
-    plt.hist(x[:,0], density=True)
+    plt.hist(x[:, 0], density=True)
     plt.show()
 
 
-Model_AutoLogistyczny()
+def Gibbs_1():
+    d = 20
+    alpha0 = 4
+    alpha1 = -2
+    beta = 0.5
+
+    def dH(i, j, X):
+        new = 0 if X[i, j] == 1 else 1
+        return alpha0 * (new - X[i, j]) + alpha1 * (new - X[i, j]) * (
+                X[i + 1, j] + X[i, j + 1] + X[i - 1, j] + X[i, j - 1])
+
+    X = np.zeros(shape=(d + 2, d + 2))
+    for i in range(1, d + 1):
+        for j in range(1, d + 1):
+            if i == j:
+                X[i, j] = 0
+            elif i == j + 1 or i == j - 1:
+                X[i, j] = 1
+    n = 10000
+    S = np.zeros(shape=n)
+    N = np.zeros(shape=n)
+    Energy = np.zeros(shape=n)
+    for k in range(n):
+        for i in range(1, d + 1):
+            for j in range(1, d + 1):
+                u = np.random.uniform()
+                if u < np.exp(-beta * dH(i, j, X)):
+                    X[i, j] = 0 if X[i, j] == 1 else 1
+
+        S[k] = sum(sum(X))
+        N[k] = np.sum(X[1: d + 1, 1: d + 1] * (
+                X[0: d, 1: d + 1] + X[1: d + 1, 0: d] + X[2: d + 2, 1: d + 1] + X[1: d + 1, 2: d + 2])) / 4
+    "plt.imshow(X, cmap='Blues')"
+    Energy = alpha0 * S + alpha1 * N
+    plt.hist(Energy, bins=50, density=True)
+    plt.show()
+    print(np.mean(S), np.mean(N))
+
+
+def Gibbs_2():
+    w = 10
+    k = 10
+    beta = 0.5
+    alpha = -0.5
+    T = 1
+
+    def J(i, j, X, Y):
+        return 2 * beta * Y[i, j] + 2 * alpha * (X[i + 1, j] + X[i, j + 1] + X[i - 1, j] + X[i, j - 1])
+
+    X = np.zeros(shape=(w + 2, k + 2))
+    Y = np.zeros(shape=(w + 2, k + 2))
+    for i in range(1, w + 1):
+        for j in range(1, k + 1):
+            u = np.random.uniform()
+            X[i, j] = 1 if u < 0.5 else -1
+            Y[i, j] = np.random.choice([1, -1])
+    n = 10001
+    S = np.zeros(shape=n)
+    N = np.zeros(shape=n)
+    for _ in range(n):
+        for i in range(1, w + 1):
+            for j in range(1, k + 1):
+                u = np.random.uniform()
+                if u < 1 / (1 + np.exp(-J(i, j, X, Y) / T)):
+                    X[i, j] = 1
+                else:
+                    X[i, j] = -1
+
+        S[k] = sum(sum(X))
+        N[k] = np.sum(X[1: w + 1, 1: k + 1] * (
+                    X[0: w, 1: k + 1] + X[1: w + 1, 0: k] + X[2: w + 2, 1: k + 1] + X[1: w + 1, 2: k + 2])) / 4
+    plt.imshow(X, cmap='Greens')
+    Energy = beta * S + alpha * N
+    "plt.hist(Energy, bins=50, density=True)"
+    plt.show()
+    print(np.mean(S), np.mean(N))
+
+
+def Metropolis():
+    w = 10
+    k = 10
+    beta = 0
+    alpha = 0.5
+    T = 1
+
+    def J(i, j, X, Y):
+        return 2 * beta * Y[i, j] + 2 * alpha * (X[i + 1, j] + X[i, j + 1] + X[i - 1, j] + X[i, j - 1])
+
+    X = np.zeros(shape=(w + 2, k + 2))
+    Y = np.zeros(shape=(w + 2, k + 2))
+    for i in range(1, w + 1):
+        for j in range(1, k + 1):
+            u = np.random.uniform()
+            X[i, j] = 1 if u < 0.5 else -1
+            Y[i, j] = np.random.choice([1, -1])
+    n = 10000
+    S = np.zeros(shape=n)
+    N = np.zeros(shape=n)
+    for _ in range(n):
+        for i in range(1, w + 1):
+            for j in range(1, k + 1):
+                u = np.random.uniform()
+                if u < np.exp(J(i, j, X, Y) * (-X[i, j]) / T):
+                    X[i, j] *= -1
+
+        S[k] = sum(sum(X))
+        N[k] = np.sum(X[1: w + 1, 1: k + 1] * (
+                X[0: w, 1: k + 1] + X[1: w + 1, 0: k] + X[2: w + 2, 1: k + 1] + X[1: w + 1, 2: k + 2])) / 4
+    "plt.imshow(X, cmap='Greens')"
+    Energy = beta * S + alpha * N
+    "plt.hist(Energy, bins=50, density=True)"
+    "plt.show()"
+    fig, axs = plt.subplots(2)
+    axs[0].imshow(X, cmap='Greens')
+    axs[1].imshow(Y, cmap='Greens')
+    plt.show()
+    print(np.mean(S), np.mean(N))
+
+
+
