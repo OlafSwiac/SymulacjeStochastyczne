@@ -639,7 +639,7 @@ def Gibbs_2():
 
         S[k] = sum(sum(X))
         N[k] = np.sum(X[1: w + 1, 1: k + 1] * (
-                    X[0: w, 1: k + 1] + X[1: w + 1, 0: k] + X[2: w + 2, 1: k + 1] + X[1: w + 1, 2: k + 2])) / 4
+                X[0: w, 1: k + 1] + X[1: w + 1, 0: k] + X[2: w + 2, 1: k + 1] + X[1: w + 1, 2: k + 2])) / 4
     plt.imshow(X, cmap='Greens')
     Energy = beta * S + alpha * N
     "plt.hist(Energy, bins=50, density=True)"
@@ -688,4 +688,39 @@ def Metropolis():
     print(np.mean(S), np.mean(N))
 
 
+def Maszyna_Boltzmana():
+    n = 3
+    m = 5
+    A = np.array([[0, 1, 1], [1, 0, 1], [0, 1, 1], [1, 0, 0], [1, 0, 0]])
+    b = np.array([0, 0, 0])
+    c = -np.sum(A, axis=1) + 0.5
+    beta = 1
 
+    w = 2 * A.T - 1
+
+    v = np.array([1, 1, 1])
+    h = np.array([1, 0, 0, 1, 1])
+    N = 10 ** 5
+    h_prob = [0 for _ in range(32)]
+    v_prob = [0 for _ in range(8)]
+
+    for _ in range(N):
+        exp_1 = np.exp(beta * (b + np.dot(w, h)))
+        exp_2 = np.exp(beta * (c + np.dot(v, w)))
+        for i in range(n):
+            v[i] = np.random.choice(2, p=[1 / (1 + exp_1[i]), exp_1[i] / (1 + exp_1[i])])
+        for j in range(m):
+            h[j] = np.random.choice(2, p=[1 / (1 + exp_2[j]), exp_2[j] / (1 + exp_2[j])])
+
+        h_sum = 1 * h[0] + 2 * h[1] + 4 * h[2] + 8 * h[3] + 16 * h[4]
+        h_prob[h_sum] += 1
+        v_sum = 1 * v[0] + 2 * v[1] + 4 * v[2]
+        v_prob[v_sum] += 1
+    h_prob = [z / N for z in h_prob]
+    v_prob = [z / N for z in v_prob]
+
+    plt.bar([i for i in range(8)], v_prob)
+    plt.show()
+
+
+Maszyna_Boltzmana()
